@@ -107,6 +107,7 @@ class MNIST_Window(QWidget):
 
     def btn_recognize_on_clicked(self):
         bbox = (104, 104, 380, 380)
+        im = []
         im = ImageGrab.grab(bbox)    # 截屏，手写数字部分
         im = im.resize((28, 28), Image.ANTIALIAS)  # 将截图转换成 28 * 28 像素
 
@@ -123,7 +124,6 @@ class MNIST_Window(QWidget):
     def btn_close_on_clicked(self):
         self.close()
 
-
     def recognize_img(self, img):  # 手写体识别函数
         myimage = img.convert('L')  # 转换成灰度图
         img  = np.asarray(myimage).astype('float32')
@@ -134,12 +134,9 @@ class MNIST_Window(QWidget):
         # best_model_filepath =  "mnist.weights.best.2019.09.06_11.31.49.h5"
         # Model =  load_model(best_model_filepath)
         y = self.Model.predict(img)
+        # print(y)
         return np.argmax(y, axis=1)
-
-# ————————————————
-# 版权声明：本文为CSDN博主「雨寒sgg」的原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接及本声明。
-# 原文链接：https://blog.csdn.net/u011389706/article/details/81460820
-
+ 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

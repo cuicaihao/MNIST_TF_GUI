@@ -77,7 +77,6 @@ model.add(Dropout(0.5))
 model.add(Dense(num_classes, activation='softmax'))
 
 
-
 #%% model training merics
 model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=keras.optimizers.Adadelta(),
@@ -113,7 +112,6 @@ pickle.dump(history, pickle_out)
 score = model.evaluate(x_test, y_test, verbose=0)
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
-
 
 #%% save the training resutls
 # Plot training & validation accuracy values
