@@ -2,4 +2,5 @@
 Author: Caihao Cui
 Location: Melbourne, VIC, AU.
 
-Demonstrate training, testing, and retraining ML/DL models with TensorFlow and Keras with an extra GUI by Qt5 
+Description: This repository demonstrates one python program including training, testing, and retraining ML/DL models with TensorFlow and Keras with an extra GUI by Qt5.
+ 
