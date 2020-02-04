@@ -55,8 +55,9 @@ y_test = keras.utils.to_categorical(y_test, num_classes)
 
 #%%
 # load the moded you want to boost the performance. 
-best_model_filepath =  "mnist.weights.best.2019.09.06_15.21.36.h5"
-# best_model_filepath = ''
+best_model_filepath =  "./models/mnist.weights.best.h5"
+
+# load the model from last time.
 model =   load_model(best_model_filepath)
 model.summary()
  
@@ -66,28 +67,35 @@ print('Train accuracy:', score[1])
 score = model.evaluate(x_test, y_test, verbose=1)
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
-# Train loss: 0.03422381600427131
-# Train accuracy: 0.9896833333333334
-# Test loss: 0.03982059933549608
-# Test accuracy: 0.9865
+# Train loss: 0.015496265928385159
+# Train accuracy: 0.9957333333333334
+# Test loss: 0.027051866476310533
+# Test accuracy: 0.9921
+
+#%% retrain the model 
+# change the optimizer in some way.
+# keras.optimizers.Adadelta(),
+# keras.optimizers.Adagrad(learning_rate=0.01)
+print("New optimizer!!!")
+model.compile(loss=keras.losses.categorical_crossentropy,
+              optimizer = keras.optimizers.Adagrad(),
+              metrics=['accuracy'])
+print(model.summary())
 
 #%%
-
-epochs = 10
 batch_size = 1024
+epochs = 30
+retrain_model_filepath="./models/retrain.mnist.weights.best.h5"
+checkpoint = ModelCheckpoint(retrain_model_filepath, 
+                            monitor='val_acc', 
+                            verbose=1, save_best_only=True, mode='Max')
+stoppoint = EarlyStopping(monitor='val_acc', min_delta=0.001,
+                            verbose=1, mode='Max', patience=5)
 
-now = datetime.now()
-best_model_filepath="mnist.weights.best."+str( now.strftime("%Y.%m.%d_%H.%M.%S"))+".h5"
-checkpoint = ModelCheckpoint(best_model_filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
-callbacks_list = [checkpoint]
-
-
-model.compile(loss=keras.losses.categorical_crossentropy,
-              optimizer=keras.optimizers.Adadelta(),
-              metrics=['accuracy'])
+callbacks_list = [checkpoint, stoppoint]
 
 print('*'*80)
-print('Start the training process at:', datetime.now())
+print('Start the retraining process at:', datetime.now())
 print('*'*80)
 history = model.fit(x_train, y_train,
           batch_size=batch_size,
@@ -97,17 +105,26 @@ history = model.fit(x_train, y_train,
           callbacks=callbacks_list)
 
 print('*'*80)
-print('End the training process at:', datetime.now())
+print('End the retraining process at:', datetime.now())
 print('*'*80)
 # save the training records
-pickle_out = open("history_retrain.pickle","wb")
+pickle_out = open("./models/history_retrain.pickle","wb")
 pickle.dump(history, pickle_out)
 
-now=datetime.now()
-save_model_dir = './models/'
-final_model_name = str( now.strftime("%Y.%m.%d_%H.%M.%S")) +'.MnistModel.h5'
-save_final_model_path = os.path.join(save_model_dir, final_model_name)
-model.save(save_final_model_path)
+#%%
+score_train = model.evaluate(x_train, y_train, verbose=1)
+print('Train loss:', score_train[0])
+print('Train accuracy:', score_train[1])
+
+score_test = model.evaluate(x_test, y_test, verbose=1)
+print('Test loss:', score_test[0])
+print('Test accuracy:', score_test[1])
+
+# compare with the orignal model's performance 
+# Train loss: 0.008936051814166906
+# Train accuracy: 0.9977333333333334 > 0.9957333333333334
+# Test loss: 0.025634761017427808
+# Test accuracy: 0.9922 > 0.9921 # accuracy imporved 0.0001
 
 #%%
 plt.figure(figsize=(8, 6))
@@ -118,7 +135,7 @@ plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Test'], loc='upper left')
 # plt.show()
-plt.savefig('retraining_validation_accuracy_values.png', dpi= 300 )
+plt.savefig('./images/retraining_validation_accuracy_values.png', dpi= 300 )
 
 # Plot training & validation loss values
 plt.figure(figsize=(8, 6))
@@ -129,7 +146,7 @@ plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Test'], loc='upper left')
 # plt.show()
-plt.savefig('retraining_validation_loss_values.png', dpi= 300 )
+plt.savefig('./images/retraining_validation_loss_values.png', dpi= 300 )
+ 
 
-
-#%%
+# %%

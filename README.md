@@ -4,8 +4,10 @@ Location: Melbourne, VIC, AU.
 
 Description: This repository demonstrates one python program including training, testing, and retraining ML/DL models with TensorFlow and Keras with an extra GUI by Qt5.
  
-Sample Images:
+## Check the input images
+![Input Check 2](./images/GUI_Input_2.PNG)
 
+Sample Images:
 ![Test 0](./images/GUI_Test_Input_0.PNG)
 ![Test 1](./images/GUI_Test_Input_1.PNG)
 ![Test 2](./images/GUI_Test_Input_2.PNG)

@@ -1,4 +1,13 @@
-## GUI Design
+# -*- coding: utf-8 -*-
+
+"""
+Created on Friday 2 Feb 2020
+
+@author: Chris.Cui
+
+Email: Chris.Cui@aurecongroup.com
+
+"""
 from __future__ import print_function
 import keras
 from keras.datasets import mnist
@@ -14,28 +23,27 @@ import numpy as np
 
 import sys
 from PyQt5.QtWidgets import QApplication
+from matplotlib import pyplot as plt
 
 
-Model_Path = "./models/2020.02.03_14.52.53.MnistModel.h5"
+
+Model_Path = r"./models/mnist.weights.best.h5"
 
 class MNIST_Window(QWidget):
 
     def __init__(self):
         super(MNIST_Window, self).__init__()
-        self.setWindowTitle('Demo')
+        self.setWindowTitle('MNIST')
         self.resize(284, 330)  # resize设置宽高
         self.move(100, 100)    # move设置位置
-        # self.setWindowFlags(Qt.FramelessWindowHint)  # 窗体无边框
-        #setMouseTracking设置为False，否则不按下鼠标时也会跟踪鼠标事件
+        # self.setWindowFlags(Qt.FramelessWindowHint)  # no frames
+        # setMouseTracking is False, only track when pressed 
         self.setMouseTracking(False)
-
-        self.pos_xy = []  #保存鼠标移动过的点
-
-
+        self.pos_xy = []  # save the points
         best_model_filepath =  Model_Path
         self.Model =  load_model(best_model_filepath)
 
-        # 添加一系列控件
+        # add wegites
         self.label_draw = QLabel('', self)
         self.label_draw.setGeometry(2, 2, 280, 280)
         self.label_draw.setStyleSheet("QLabel{border:1px solid black;}")
@@ -66,7 +74,7 @@ class MNIST_Window(QWidget):
     def paintEvent(self, event):
         painter = QPainter()
         painter.begin(self)
-        pen = QPen(Qt.black, 30, Qt.SolidLine)
+        pen = QPen(Qt.black, 23, Qt.SolidLine) # line width is 25 2~3 px based on the MNIST
         painter.setPen(pen)
 
         if len(self.pos_xy) > 1:
@@ -87,36 +95,37 @@ class MNIST_Window(QWidget):
 
     def mouseMoveEvent(self, event):
         '''
-            按住鼠标移动事件：将当前点添加到pos_xy列表中
+        Pressed moving add points into xy list
         '''
-        #中间变量pos_tmp提取当前点
+        # extrack the positions  
         pos_tmp = (event.pos().x(), event.pos().y())
-        #pos_tmp添加到self.pos_xy中
+        # pos_tmp add to self.pos_xy list
         self.pos_xy.append(pos_tmp)
 
         self.update()
 
     def mouseReleaseEvent(self, event):
         '''
-            重写鼠标按住后松开的事件
-            在每次松开后向pos_xy列表中添加一个断点(-1, -1)
+            Overwrite the mouserelease event
+            pos_x (-1, -1) add breakpoints each time
         '''
         pos_test = (-1, -1)
         self.pos_xy.append(pos_test)
         self.update()
 
-    def btn_recognize_on_clicked(self):
-        bbox = (104, 104, 380, 380)
+    def btn_recognize_on_clicked(self): # issues within screen capture.
+        # bbox = (104, 104, 380, 380) / [4, 40] [284, 320]
+        bbox = (114, 150, 114+280-11, 150+280-11) # relocated [100, 100] with padding 10
         im = []
-        im = ImageGrab.grab(bbox)    # 截屏，手写数字部分
-        im = im.resize((28, 28), Image.ANTIALIAS)  # 将截图转换成 28 * 28 像素
+        im = ImageGrab.grab(bbox)    # screen capture
+        im = im.resize((28, 28), Image.ANTIALIAS)  # reshape image
 
-        recognize_result = self.recognize_img(im)  # 调用识别函数
+        recognize_result = self.recognize_img(im)  # apply our pretrained model
         print(recognize_result[0], flush=True)
-        self.label_result.setText(str(recognize_result[0]))  # 显示识别结果
+        self.label_result.setText(str(recognize_result[0]))  # show label
         self.update()
 
-    def btn_clear_on_clicked(self):
+    def btn_clear_on_clicked(self): # clear the canvas
         self.pos_xy = []
         self.label_result.setText('')
         self.update()
@@ -124,17 +133,20 @@ class MNIST_Window(QWidget):
     def btn_close_on_clicked(self):
         self.close()
 
-    def recognize_img(self, img):  # 手写体识别函数
-        myimage = img.convert('L')  # 转换成灰度图
+    def recognize_img(self, img):   #  
+        myimage = img.convert('L')  # convert the imge to grayscale format
         img  = np.asarray(myimage).astype('float32')
         img = (255 - img)*1.0/255.0
         img_rows, img_cols = 28, 28
-        img = img.reshape(img_rows, img_cols, 1)
+        img = img.reshape(img_rows, img_cols, 1) # change the input format
         img = np.expand_dims(img, axis=0)
-        # best_model_filepath =  "mnist.weights.best.2019.09.06_11.31.49.h5"
-        # Model =  load_model(best_model_filepath)
+        ## review the input images 
+        plt.figure()
+        plt.imshow(np.squeeze(img)) # remove extra dimensions
+        plt.colorbar()
+        plt.grid(False)
+        plt.show()
         y = self.Model.predict(img)
-        # print(y)
         return np.argmax(y, axis=1)
  
 

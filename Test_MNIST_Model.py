@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Created on Friday 06-09-2019
+Created on Friday 2 Feb 2020
 
 @author: Chris.Cui
 
@@ -14,6 +14,7 @@ import keras
 from keras.datasets import mnist
 from keras.models import load_model
 from keras import backend as K
+from keras.utils import to_categorical
 
 import numpy as np 
 
@@ -21,7 +22,7 @@ import numpy as np
 # the data, split between train and test sets
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
  
-#%% 
+#%% Data preprocessing
 num_classes = 10
 # input image dimensions
 img_rows, img_cols = 28, 28
@@ -47,13 +48,9 @@ y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
 
 #%%
-# best_model_filepath =  "mnist.weights.best.2019.09.06_11.31.49.h5"
-
-best_model_filepath =  r"./models/2020.02.03_14.52.53.MnistModel.h5"
-
+best_model_filepath =  r"./models/mnist.weights.best.h5"
 Model =   load_model(best_model_filepath)
 Model.summary()
-
 
 #%%
 score_train = Model.evaluate(x_train, y_train, verbose=1)
@@ -65,31 +62,45 @@ print('Test loss:', score_test[0])
 print('Test accuracy:', score_test[1])
 
 
-#%%
+#%% check results
 from sklearn.metrics import classification_report, confusion_matrix
-# from sklearn.metrics import plot_confusion_matrix
- 
-y_train_predic = Model.predict(x_train, verbose=1)
-
-#%%
-from keras.utils import to_categorical
-
-#%%
-
-y_train_label = np.argmax(y_train, axis=1)
-y_train_predic_label = np.argmax(y_train_predic, axis=1)
-
-#%%
 from matplotlib import pyplot as plt
-
-cm = confusion_matrix(y_train_label, y_train_predic_label)
-
 import seaborn as sn
-print(cm)
-plt.imshow(cm )
+ 
+    
+#%% make a single prediction
+random_id = np.random.randint(len(x_train)) 
+x = x_train[random_id,:,:,:] 
+plt.figure()
+plt.imshow(np.squeeze(x)) # remove extra dimensions
+plt.colorbar()
+plt.grid(False)
+plt.show()
 
+x = np.expand_dims(x, axis=0)
+y = Model.predict(x)
 
-#%%
+np.set_printoptions(formatter={'float': '{: 0.3f}'.format})
+print('output vector {}'.format(y))
+print('label: {}'.format(np.argmax(y)))
+
+#%% make a batch prediction to get comfusion matrix
+y_train_label = np.argmax(y_train, axis=1)
+y_train_predic = Model.predict(x_train, verbose=1)
+y_train_predic_label = np.argmax(y_train_predic, axis=1)
+cm_train = confusion_matrix(y_train_label, y_train_predic_label)
+print(cm_train)
+plt.imshow(cm_train )
+
+#%%  testing comfusion matrix
+y_test_label = np.argmax(y_test, axis=1)
+y_test_predic = Model.predict(x_test, verbose=1)
+y_test_predic_label = np.argmax(y_test_predic, axis=1)
+cm_test = confusion_matrix(y_test_label, y_test_predic_label)
+print(cm_test)
+plt.imshow(cm_test )
+
+#%% precision recall 
 def precision(label, confusion_matrix):
     col = confusion_matrix[:, label]
     return confusion_matrix[label, label] / col.sum()
@@ -112,31 +123,32 @@ def recall_macro_average(confusion_matrix):
         sum_of_recalls += recall(label, confusion_matrix)
     return sum_of_recalls / columns
 
-
-print("label precision recall")
+print("Train: label precision recall")
+cm = cm_train
 for label in range(10):
     print(f"{label:5d} {precision(label, cm):9.3f} {recall(label, cm):6.3f}")
-    
-#%%
-
 print("precision total:", precision_macro_average(cm))
-
 print("recall total:", recall_macro_average(cm))
 
 
-#%%
+print("Tests label precision recall")
+cm = cm_test
+for label in range(10):
+    print(f"{label:5d} {precision(label, cm):9.3f} {recall(label, cm):6.3f}")
+print("precision total:", precision_macro_average(cm))
+print("recall total:", recall_macro_average(cm))
 
+ 
+#%% Accuracy
 def accuracy(confusion_matrix):
     diagonal_sum = confusion_matrix.trace()
     sum_of_all_elements = confusion_matrix.sum()
     return diagonal_sum / sum_of_all_elements 
 
-print("accuracy total:", accuracy(cm))
-    
-#%%
-x = x_train[1,:,:,:]
-x = np.expand_dims(x, axis=0)
-y = Model.predict(x)
-print(y)
+print("Train accuracy total:", accuracy(cm_train))
+print("Train accuracy total:", accuracy(cm_test))
+
 
  
+
+# %%
