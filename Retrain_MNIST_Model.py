@@ -17,7 +17,6 @@ from keras import backend as K
 from keras.callbacks import ModelCheckpoint
  
 import os
-import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 from datetime import datetime
